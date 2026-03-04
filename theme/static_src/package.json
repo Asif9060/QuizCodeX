@@ -1,0 +1,15 @@
+{
+  "name": "quiz-platform-theme",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "tailwindcss -i ./src/styles.css -o ../static/css/main.css --watch",
+    "build": "tailwindcss -i ./src/styles.css -o ../static/css/main.css --minify"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.0",
+    "daisyui": "^4.12.0",
+    "autoprefixer": "^10.4.0",
+    "postcss": "^8.4.0"
+  }
+}

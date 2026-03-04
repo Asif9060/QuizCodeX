@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Leaderboard{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto px-4 lg:px-8 py-12" x-data="{ tab: 'all', langFilter: 'all' }">
+
+  <!-- Header -->
+  <div class="text-center mb-12">
+    <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 text-amber-400 text-xs font-medium mb-4">
+      <span class="material-symbols-rounded text-xs">emoji_events</span>
+      Top Performers
+    </div>
+    <h1 class="text-3xl font-extrabold mb-2">Leaderboard</h1>
+    <p class="text-base-content/50">The best quiz takers on the platform</p>
+  </div>
+
+  <!-- ── Podium (top 3) ── -->
+  <div class="flex items-end justify-center gap-4 mb-12">
+
+    <!-- 2nd place -->
+    <div class="podium-card podium-2nd flex-1 max-w-[160px] animate-slide-up" style="animation-delay:0.1s">
+      <div class="avatar placeholder mb-2">
+        <div class="w-14 h-14 rounded-full bg-slate-400/20 border-2 border-slate-400/40 text-slate-300 text-lg font-bold flex items-center justify-center">
+          {{ podium.1.username|first|upper }}
+        </div>
+      </div>
+      <div class="text-2xl mb-1">🥈</div>
+      <div class="font-bold text-sm text-center truncate max-w-full">{{ podium.1.username }}</div>
+      <div class="text-xs text-base-content/50 font-mono">{{ podium.1.total_score }} pts</div>
+      <div class="w-full h-12 mt-2 bg-slate-400/20 rounded-t-lg flex items-center justify-center">
+        <span class="text-2xl font-black text-slate-400">2</span>
+      </div>
+    </div>
+
+    <!-- 1st place -->
+    <div class="podium-card podium-1st flex-1 max-w-[180px] animate-slide-up" style="animation-delay:0s">
+      <div class="badge badge-xs bg-amber-500/20 text-amber-400 border-amber-500/30 mb-2">Champion</div>
+      <div class="avatar placeholder mb-2">
+        <div class="w-16 h-16 rounded-full bg-amber-500/20 border-2 border-amber-500/50 text-amber-300 text-xl font-bold flex items-center justify-center">
+          {{ podium.0.username|first|upper }}
+        </div>
+      </div>
+      <div class="text-3xl mb-1">🥇</div>
+      <div class="font-bold text-sm text-center truncate max-w-full">{{ podium.0.username }}</div>
+      <div class="text-xs text-amber-400/80 font-mono font-bold">{{ podium.0.total_score }} pts</div>
+      <div class="w-full h-20 mt-2 bg-amber-500/20 rounded-t-lg flex items-center justify-center">
+        <span class="text-3xl font-black text-amber-400">1</span>
+      </div>
+    </div>
+
+    <!-- 3rd place -->
+    <div class="podium-card podium-3rd flex-1 max-w-[160px] animate-slide-up" style="animation-delay:0.2s">
+      <div class="avatar placeholder mb-2">
+        <div class="w-14 h-14 rounded-full bg-amber-700/20 border-2 border-amber-700/40 text-amber-600 text-lg font-bold flex items-center justify-center">
+          {{ podium.2.username|first|upper }}
+        </div>
+      </div>
+      <div class="text-2xl mb-1">🥉</div>
+      <div class="font-bold text-sm text-center truncate max-w-full">{{ podium.2.username }}</div>
+      <div class="text-xs text-base-content/50 font-mono">{{ podium.2.total_score }} pts</div>
+      <div class="w-full h-8 mt-2 bg-amber-700/20 rounded-t-lg flex items-center justify-center">
+        <span class="text-xl font-black text-amber-700">3</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── Tabs ── -->
+  <div class="tabs tabs-boxed bg-base-200 border border-surface-border p-1 mb-6 inline-flex gap-1">
+    <button @click="tab = 'all'" :class="tab === 'all' ? 'tab tab-active bg-primary text-white' : 'tab text-base-content/50 hover:text-base-content'">All Time</button>
+    <button @click="tab = 'week'" :class="tab === 'week' ? 'tab tab-active bg-primary text-white' : 'tab text-base-content/50 hover:text-base-content'">This Week</button>
+    <button @click="tab = 'lang'" :class="tab === 'lang' ? 'tab tab-active bg-primary text-white' : 'tab text-base-content/50 hover:text-base-content'">By Language</button>
+  </div>
+
+  <!-- Language picker (shown only in lang tab) -->
+  <div x-show="tab === 'lang'" x-transition class="mb-4">
+    <select class="select select-bordered bg-base-200 border-surface-border focus:border-primary w-full sm:w-auto" x-model="langFilter">
+      <option value="all">All Languages</option>
+      {% for lang in languages %}
+      <option value="{{ lang.slug }}">{{ lang.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <!-- ── Leaderboard table ── -->
+  <div class="rounded-xl border border-surface-border bg-base-200 overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="table w-full">
+        <thead>
+          <tr class="bg-base-300 text-base-content/50 text-xs uppercase tracking-wider">
+            <th class="w-14 text-center">#</th>
+            <th>Player</th>
+            <th class="hidden sm:table-cell">Quizzes</th>
+            <th class="text-right">Score</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for leader in leaders %}
+          <tr class="border-t border-surface-border hover:bg-base-300 transition-colors
+                     {% if leader.rank <= 3 %}{% if leader.rank == 1 %}bg-amber-500/5{% elif leader.rank == 2 %}bg-slate-400/5{% else %}bg-amber-700/5{% endif %}{% endif %}"
+              x-show="tab !== 'week' || {{ forloop.counter }} <= 5">
+            <!-- Rank -->
+            <td class="text-center font-mono font-bold">
+              {% if leader.rank == 1 %}<span class="text-2xl">🥇</span>
+              {% elif leader.rank == 2 %}<span class="text-2xl">🥈</span>
+              {% elif leader.rank == 3 %}<span class="text-2xl">🥉</span>
+              {% else %}<span class="text-base-content/50 text-sm">{{ leader.rank }}</span>
+              {% endif %}
+            </td>
+
+            <!-- Player -->
+            <td>
+              <div class="flex items-center gap-3">
+                <div class="avatar placeholder">
+                  <div class="w-8 h-8 rounded-full bg-primary/20 border border-primary/30 text-primary text-xs font-bold flex items-center justify-center">
+                    {{ leader.username|first|upper }}
+                  </div>
+                </div>
+                <div>
+                  <div class="font-semibold text-sm">{{ leader.username }}</div>
+                  {% if leader.badge %}
+                  <div class="text-xs text-base-content/40 capitalize">{{ leader.badge }} tier</div>
+                  {% endif %}
+                </div>
+              </div>
+            </td>
+
+            <!-- Quizzes -->
+            <td class="hidden sm:table-cell text-sm text-base-content/50">{{ leader.quizzes }}</td>
+
+            <!-- Score -->
+            <td class="text-right">
+              <span class="font-mono font-bold {% if leader.rank <= 3 %}text-amber-400{% else %}text-primary{% endif %}">
+                {{ leader.total_score }}
+              </span>
+              <span class="text-xs text-base-content/30 ml-1">pts</span>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Join CTA for guests -->
+  {% if not user.is_authenticated %}
+  <div class="mt-8 text-center rounded-xl border border-primary/20 bg-primary/5 p-6">
+    <p class="text-sm text-base-content/60 mb-3">Sign up to track your progress and appear on the leaderboard.</p>
+    <a href="{% url 'accounts:register' %}" class="btn btn-primary btn-sm gap-2">
+      <span class="material-symbols-rounded text-sm">person_add</span>
+      Create account
+    </a>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

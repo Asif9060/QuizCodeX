@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ quiz.title }}{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 py-8" id="quiz-app" x-data="quizApp()">
+
+  <!-- ── Top bar ── -->
+  <div class="flex items-center justify-between mb-8 gap-4">
+
+    <!-- Language + quiz title -->
+    <div class="flex items-center gap-3 min-w-0">
+      <div class="w-9 h-9 rounded-lg flex items-center justify-center font-bold text-xs font-mono shrink-0"
+           style="background-color: {{ language.color }}20; border: 1px solid {{ language.color }}40; color: {{ language.color }};">
+        {{ language.icon_char }}
+      </div>
+      <div class="min-w-0">
+        <div class="font-semibold text-sm truncate">{{ quiz.title }}</div>
+        <div class="text-xs text-base-content/40">{{ language.name }}</div>
+      </div>
+    </div>
+
+    <!-- Timer -->
+    {% if quiz.time_limit %}
+    <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-surface-border bg-base-200 font-mono text-sm font-bold shrink-0"
+         :class="timeLeft < 60 ? 'text-error border-error/40 bg-error/10' : 'text-base-content/70'">
+      <span class="material-symbols-rounded text-sm" :class="timeLeft < 60 ? 'text-error' : 'text-base-content/40'">timer</span>
+      <span x-text="formattedTime"></span>
+    </div>
+    {% endif %}
+
+    <!-- Progress counter -->
+    <div class="text-sm font-medium text-base-content/50 shrink-0">
+      <span class="text-base-content font-bold" x-text="currentIndex + 1">1</span>
+      / <span x-text="questions.length">{{ total_questions }}</span>
+    </div>
+  </div>
+
+  <!-- ── Progress bar ── -->
+  <div class="w-full h-1.5 bg-base-300 rounded-full mb-8 overflow-hidden">
+    <div class="h-full bg-gradient-to-r from-primary to-secondary rounded-full transition-all duration-500"
+         :style="`width: ${progressPct}%`">
+    </div>
+  </div>
+
+  <!-- ── Question card ── -->
+  <div class="card-quiz p-6 md:p-8 mb-6">
+    <div class="text-xs text-base-content/40 uppercase tracking-widest font-medium mb-4">
+      Question <span x-text="currentIndex + 1"></span> of <span x-text="questions.length"></span>
+    </div>
+    <h2 class="text-xl font-bold leading-relaxed mb-8" x-text="currentQuestion.text"></h2>
+
+    <!-- Options -->
+    <div class="space-y-3">
+      <template x-for="(option, idx) in currentQuestion.options" :key="option.id">
+        <button
+          class="option-btn w-full"
+          :class="selected === idx + 1 ? 'selected' : ''"
+          @click="selectOption(idx + 1)"
+          :disabled="selected !== null">
+
+          <div class="flex items-center gap-3">
+            <!-- Option number -->
+            <div class="w-7 h-7 rounded-lg border flex items-center justify-center text-xs font-bold shrink-0 transition-colors"
+                 :class="selected === idx + 1 ? 'bg-primary/20 border-primary text-primary' : 'bg-base-200 border-surface-border text-base-content/40'"
+                 x-text="idx + 1">
+            </div>
+            <!-- Keyboard hint -->
+            <span class="text-xs text-base-content/30 font-mono mr-1 hidden sm:block" x-text="`[${idx + 1}]`"></span>
+            <!-- Option text -->
+            <span class="flex-1 text-left" x-text="option.text"></span>
+          </div>
+
+        </button>
+      </template>
+    </div>
+  </div>
+
+  <!-- ── Keyboard hint ── -->
+  <div class="text-center text-xs text-base-content/30 mb-6">
+    Press <kbd class="kbd kbd-xs">1</kbd> – <kbd class="kbd kbd-xs" x-text="currentQuestion.options.length">4</kbd> to select an answer
+  </div>
+
+  <!-- ── Exit ── -->
+  <div class="flex justify-start items-center">
+    <a href="{% url 'languages:detail' slug=language.slug %}" class="btn btn-ghost btn-sm gap-1 text-base-content/40">
+      <span class="material-symbols-rounded text-sm">arrow_back</span>
+      Exit
+    </a>
+  </div>
+
+  <!-- ── Progress dots (Alpine x-for) ── -->
+  <div class="flex items-center justify-center gap-1.5 mt-8 flex-wrap">
+    <template x-for="(_, i) in questions" :key="i">
+      <div class="progress-dot"
+           :class="i === currentIndex ? 'active' : i < currentIndex ? 'answered' : ''">
+      </div>
+    </template>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+{# Embed all questions as JSON for Alpine.js — must be inside a block to render #}
+{{ questions|json_script:"questions-data" }}
+<script>
+  function quizApp() {
+    return {
+      questions: JSON.parse(document.getElementById('questions-data').textContent),
+      currentIndex: 0,
+      selected: null,
+      timeLeft: {{ quiz.time_limit|default:600 }},
+      resultsUrl: "{{ results_url }}",
+
+      get currentQuestion() {
+        return this.questions[this.currentIndex];
+      },
+
+      get formattedTime() {
+        const m = Math.floor(this.timeLeft / 60).toString().padStart(2, '0');
+        const s = (this.timeLeft % 60).toString().padStart(2, '0');
+        return `${m}:${s}`;
+      },
+
+      get progressPct() {
+        return (this.currentIndex / this.questions.length) * 100;
+      },
+
+      selectOption(optionNumber) {
+        if (this.selected !== null) return;
+        this.selected = optionNumber;
+        // Brief 150 ms so the highlight is visible before advancing
+        setTimeout(() => this.advance(), 150);
+      },
+
+      advance() {
+        this.selected = null;
+        if (this.currentIndex < this.questions.length - 1) {
+          this.currentIndex++;
+        } else {
+          window.location.href = this.resultsUrl;
+        }
+      },
+
+      init() {
+        {% if quiz.time_limit %}
+        const timer = setInterval(() => {
+          if (this.timeLeft > 0) {
+            this.timeLeft--;
+          } else {
+            clearInterval(timer);
+            window.location.href = this.resultsUrl;
+          }
+        }, 1000);
+        {% endif %}
+
+        // Keyboard shortcuts: 1–4 to pick an option
+        window.addEventListener('keydown', (e) => {
+          const num = parseInt(e.key);
+          if (num >= 1 && num <= 4 && this.selected === null) {
+            this.selectOption(num);
+          }
+        });
+      }
+    };
+  }
+</script>
+{% endblock %}

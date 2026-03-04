@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ language.name }} Quizzes{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 lg:px-8 py-12">
+
+  <!-- Breadcrumb -->
+  <div class="breadcrumbs text-sm text-base-content/40 mb-8">
+    <ul>
+      <li><a href="{% url 'core:home' %}" class="hover:text-primary">Home</a></li>
+      <li><a href="{% url 'languages:list' %}" class="hover:text-primary">Languages</a></li>
+      <li class="text-base-content/70">{{ language.name }}</li>
+    </ul>
+  </div>
+
+  <!-- Language hero banner -->
+  <div class="rounded-2xl border border-surface-border bg-base-200 p-8 mb-10 flex flex-col sm:flex-row items-start sm:items-center gap-6">
+    <div class="w-16 h-16 rounded-2xl flex items-center justify-center font-bold text-xl font-mono shrink-0 shadow-lg"
+         style="background-color: {{ language.color }}20; border: 1.5px solid {{ language.color }}50; color: {{ language.color }};">
+      {{ language.icon_char }}
+    </div>
+    <div class="flex-1">
+      <h1 class="text-2xl font-extrabold mb-1">{{ language.name }} Quizzes</h1>
+      <p class="text-base-content/50 text-sm">{{ quizzes|length }} quizzes available · Test your {{ language.name }} knowledge</p>
+    </div>
+    <!-- Stats row -->
+    <div class="flex gap-6 text-center shrink-0">
+      <div>
+        <div class="font-bold text-xl">{{ quizzes|length }}</div>
+        <div class="text-xs text-base-content/40 uppercase tracking-wider">Quizzes</div>
+      </div>
+      <div>
+        <div class="font-bold text-xl text-primary">—</div>
+        <div class="text-xs text-base-content/40 uppercase tracking-wider">Your Best</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filter tabs -->
+  <div class="flex items-center gap-2 mb-6 flex-wrap" x-data="{ activeFilter: 'all' }">
+    <button @click="activeFilter = 'all'"
+            :class="activeFilter === 'all' ? 'btn btn-primary btn-sm' : 'btn btn-ghost btn-sm'">All</button>
+    <button @click="activeFilter = 'beginner'"
+            :class="activeFilter === 'beginner' ? 'btn btn-sm bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'btn btn-ghost btn-sm'">Beginner</button>
+    <button @click="activeFilter = 'intermediate'"
+            :class="activeFilter === 'intermediate' ? 'btn btn-sm bg-amber-500/20 text-amber-400 border-amber-500/30' : 'btn btn-ghost btn-sm'">Intermediate</button>
+    <button @click="activeFilter = 'advanced'"
+            :class="activeFilter === 'advanced' ? 'btn btn-sm bg-rose-500/20 text-rose-400 border-rose-500/30' : 'btn btn-ghost btn-sm'">Advanced</button>
+
+    <!-- Quiz list -->
+    <div class="w-full mt-4 space-y-3">
+      {% for quiz in quizzes %}
+      <div data-difficulty="{{ quiz.difficulty|lower }}"
+           x-show="activeFilter === 'all' || activeFilter === $el.dataset.difficulty"
+           x-transition
+           class="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 rounded-xl border border-surface-border bg-base-200 hover:border-primary/40 hover:bg-base-300 transition-all group">
+
+        <!-- Info -->
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2 flex-wrap mb-1">
+            <span class="font-semibold">{{ quiz.title }}</span>
+            <span class="badge-{{ quiz.difficulty|lower }}">{{ quiz.difficulty }}</span>
+          </div>
+          <div class="flex items-center gap-4 text-xs text-base-content/40">
+            <span class="flex items-center gap-1">
+              <span class="material-symbols-rounded text-xs">help_outline</span>
+              {{ quiz.question_count }} questions
+            </span>
+            {% if quiz.time_limit %}
+            <span class="flex items-center gap-1">
+              <span class="material-symbols-rounded text-xs">timer</span>
+              {{ quiz.time_limit }} sec
+            </span>
+            {% endif %}
+            <span class="flex items-center gap-1">
+              <span class="material-symbols-rounded text-xs">people</span>
+              Attempted by many
+            </span>
+          </div>
+        </div>
+
+        <!-- Action -->
+        <a href="{% url 'quizzes:take' slug=quiz.slug %}"
+           class="btn btn-primary btn-sm gap-1 shrink-0">
+          <span class="material-symbols-rounded text-sm">play_arrow</span>
+          Start
+        </a>
+      </div>
+      {% empty %}
+      <div class="text-center py-16 text-base-content/40">
+        <span class="material-symbols-rounded text-5xl block mb-3">quiz</span>
+        No quizzes available yet for this language.
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+</div>
+{% endblock %}

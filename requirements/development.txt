@@ -1,0 +1,6 @@
+-r base.txt
+
+# Dev-only tools
+django-browser-reload>=1.12
+django-debug-toolbar>=4.3
+ipython>=8.0

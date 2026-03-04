@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Home{% endblock %}
+{% block meta_description %}Master programming languages through interactive quizzes. Python, JavaScript, Java, C++, and 16 more.{% endblock %}
+
+{% block content %}
+
+<!-- ════════════════════════
+     HERO SECTION
+════════════════════════ -->
+<section class="relative overflow-hidden pt-20 pb-24 px-4">
+  <!-- Background glow blobs -->
+  <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-primary/10 rounded-full blur-3xl pointer-events-none"></div>
+  <div class="absolute top-20 right-0 w-[300px] h-[300px] bg-secondary/8 rounded-full blur-3xl pointer-events-none"></div>
+
+  <div class="max-w-7xl mx-auto relative">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+
+      <!-- Text -->
+      <div class="animate-slide-up">
+        <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-primary/30 bg-primary/10 text-primary text-xs font-medium mb-6">
+          <span class="material-symbols-rounded text-xs">auto_awesome</span>
+          20 Programming Languages · 1000+ Quizzes
+        </div>
+
+        <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight mb-6">
+          Master Coding —
+          <span class="text-gradient-primary block">One Quiz at a Time</span>
+        </h1>
+
+        <p class="text-base-content/60 text-lg mb-8 max-w-lg leading-relaxed">
+          Test your knowledge across 20 programming languages. From Python to Rust, level up your skills with 50 targeted quizzes per language.
+        </p>
+
+        <div class="flex flex-wrap gap-3">
+          <a href="{% url 'languages:list' %}" class="btn btn-primary btn-lg gap-2">
+            <span class="material-symbols-rounded">rocket_launch</span>
+            Start a Quiz
+          </a>
+          <a href="{% url 'leaderboard:index' %}" class="btn btn-outline btn-lg gap-2">
+            <span class="material-symbols-rounded">leaderboard</span>
+            Leaderboard
+          </a>
+        </div>
+      </div>
+
+      <!-- Code window decoration -->
+      <div class="hidden lg:block animate-fade-in">
+        <div class="code-window shadow-2xl shadow-primary/10">
+          <div class="code-window-header">
+            <span class="code-dot bg-rose-500"></span>
+            <span class="code-dot bg-amber-500"></span>
+            <span class="code-dot bg-emerald-500"></span>
+            <span class="ml-auto text-xs text-base-content/40">quiz.py</span>
+          </div>
+          <div class="p-5 text-sm leading-relaxed">
+<pre class="text-base-content/80"><span class="text-purple-400">def</span> <span class="text-blue-400">quiz_question</span>():
+    <span class="text-base-content/50"># Python Basics — Question 1</span>
+    question = <span class="text-emerald-400">"What is a list comprehension?"</span>
+
+    options = [
+        <span class="text-emerald-400">"A concise way to create lists"</span>,
+        <span class="text-base-content/50">"A type of loop"</span>,
+        <span class="text-base-content/50">"A sorting method"</span>,
+        <span class="text-base-content/50">"A built-in function"</span>,
+    ]
+
+    <span class="text-purple-400">return</span> {
+        <span class="text-amber-400">"q"</span>: question,
+        <span class="text-amber-400">"correct"</span>: <span class="text-blue-400">0</span>  <span class="text-base-content/30"># ✓</span>
+    }</pre>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════
+     STATS BAR
+════════════════════════ -->
+<section class="border-y border-surface-border bg-base-200/50 py-6 px-4">
+  <div class="max-w-7xl mx-auto">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div class="text-center">
+        <div class="text-3xl font-extrabold text-gradient-primary">{{ stats.total_languages }}</div>
+        <div class="text-xs text-base-content/50 mt-1 uppercase tracking-wider">Languages</div>
+      </div>
+      <div class="text-center">
+        <div class="text-3xl font-extrabold text-gradient-primary">{{ stats.total_quizzes|intcomma }}+</div>
+        <div class="text-xs text-base-content/50 mt-1 uppercase tracking-wider">Quizzes</div>
+      </div>
+      <div class="text-center">
+        <div class="text-3xl font-extrabold text-gradient-primary">{{ stats.total_users|intcomma }}</div>
+        <div class="text-xs text-base-content/50 mt-1 uppercase tracking-wider">Members</div>
+      </div>
+      <div class="text-center">
+        <div class="text-3xl font-extrabold text-gradient-primary">{{ stats.quizzes_taken|intcomma }}+</div>
+        <div class="text-xs text-base-content/50 mt-1 uppercase tracking-wider">Quizzes Taken</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════
+     FEATURED LANGUAGES
+════════════════════════ -->
+<section class="py-20 px-4">
+  <div class="max-w-7xl mx-auto">
+    <div class="flex items-end justify-between mb-10">
+      <div>
+        <h2 class="section-title">Featured Languages</h2>
+        <p class="section-subtitle">Start with the most popular picks</p>
+      </div>
+      <a href="{% url 'languages:list' %}" class="btn btn-ghost btn-sm gap-1 text-primary">
+        View all
+        <span class="material-symbols-rounded text-sm">arrow_forward</span>
+      </a>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+      {% for lang in featured_languages %}
+      <a href="{% url 'languages:detail' slug=lang.slug %}" class="card-language group">
+        <!-- Icon + Name -->
+        <div class="flex items-center gap-3">
+          <div class="w-11 h-11 rounded-xl flex items-center justify-center font-bold text-sm font-mono text-white shrink-0"
+               style="background-color: {{ lang.color }}20; border: 1px solid {{ lang.color }}40; color: {{ lang.color }};">
+            {{ lang.icon_char }}
+          </div>
+          <div>
+            <div class="font-semibold">{{ lang.name }}</div>
+            <div class="text-xs text-base-content/50">{{ lang.quiz_count }} quizzes</div>
+          </div>
+        </div>
+
+        <!-- Difficulty badge + arrow -->
+        <div class="flex items-center justify-between mt-2">
+          <span class="badge-{{ lang.difficulty|lower }}">{{ lang.difficulty }}</span>
+          <span class="material-symbols-rounded text-base text-base-content/30 group-hover:text-primary group-hover:translate-x-1 transition-all">arrow_forward</span>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════
+     HOW IT WORKS
+════════════════════════ -->
+<section class="py-20 px-4 bg-base-200/30">
+  <div class="max-w-7xl mx-auto">
+    <div class="text-center mb-14">
+      <h2 class="section-title">How It Works</h2>
+      <p class="section-subtitle">Three steps, zero friction</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+      <!-- Step 1 -->
+      <div class="text-center">
+        <div class="w-16 h-16 rounded-2xl bg-primary/15 border border-primary/30 flex items-center justify-center mx-auto mb-5">
+          <span class="material-symbols-rounded text-primary text-2xl">code</span>
+        </div>
+        <div class="text-xs font-bold text-primary/60 uppercase tracking-widest mb-2">Step 01</div>
+        <h3 class="font-bold text-lg mb-2">Pick a Language</h3>
+        <p class="text-sm text-base-content/50 leading-relaxed">Choose from 20 programming languages — from beginner-friendly Python to advanced Haskell.</p>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="text-center">
+        <div class="w-16 h-16 rounded-2xl bg-secondary/15 border border-secondary/30 flex items-center justify-center mx-auto mb-5">
+          <span class="material-symbols-rounded text-secondary text-2xl">help_outline</span>
+        </div>
+        <div class="text-xs font-bold text-secondary/60 uppercase tracking-widest mb-2">Step 02</div>
+        <h3 class="font-bold text-lg mb-2">Answer Questions</h3>
+        <p class="text-sm text-base-content/50 leading-relaxed">Work through up to 50 multiple-choice questions per quiz. Timed or at your own pace.</p>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="text-center">
+        <div class="w-16 h-16 rounded-2xl bg-accent/15 border border-accent/30 flex items-center justify-center mx-auto mb-5">
+          <span class="material-symbols-rounded text-accent text-2xl">emoji_events</span>
+        </div>
+        <div class="text-xs font-bold text-accent/60 uppercase tracking-widest mb-2">Step 03</div>
+        <h3 class="font-bold text-lg mb-2">See Your Score</h3>
+        <p class="text-sm text-base-content/50 leading-relaxed">Get instant results with per-question review, detailed explanations, and leaderboard ranking.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════
+     CTA BANNER
+════════════════════════ -->
+<section class="py-20 px-4">
+  <div class="max-w-3xl mx-auto text-center">
+    <div class="rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/10 via-base-200 to-secondary/10 p-10">
+      <div class="w-14 h-14 rounded-2xl bg-primary/20 border border-primary/40 flex items-center justify-center mx-auto mb-5">
+        <span class="material-symbols-rounded text-primary text-2xl">rocket_launch</span>
+      </div>
+      <h2 class="text-3xl font-extrabold mb-3">Ready to level up?</h2>
+      <p class="text-base-content/50 mb-7">Join thousands of developers sharpening their skills daily.</p>
+      <div class="flex flex-wrap gap-3 justify-center">
+        {% if user.is_authenticated %}
+          <a href="{% url 'languages:list' %}" class="btn btn-primary btn-lg gap-2">
+            <span class="material-symbols-rounded">play_arrow</span>
+            Continue learning
+          </a>
+        {% else %}
+          <a href="{% url 'accounts:register' %}" class="btn btn-primary btn-lg gap-2">
+            <span class="material-symbols-rounded">person_add</span>
+            Create free account
+          </a>
+          <a href="{% url 'languages:list' %}" class="btn btn-outline btn-lg gap-2">
+            Browse quizzes
+          </a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}
