@@ -23,10 +23,10 @@ urlpatterns = [
     # Leaderboard
     path("leaderboard/", include("apps.leaderboard.urls", namespace="leaderboard")),
 
-    # Future: contests, ai_solutions, api
-    # path("contests/", include("apps.contests.urls", namespace="contests")),
-    # path("ai/", include("apps.ai_solutions.urls", namespace="ai_solutions")),
-    # path("api/v1/", include("apps.api.urls", namespace="api_v1")),
+    # AI Explanations (staff-only AJAX)
+    path("ai/", include("apps.ai_solutions.urls", namespace="ai_solutions")),
+
+    # Future: contests, api
 ]
 
 # Serve media files in development

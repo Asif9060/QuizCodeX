@@ -30,6 +30,18 @@ class UserResult(TimeStampedModel):
             return 0
         return round((self.score / self.total_points) * 100)
 
+    @property
+    def time_taken(self):
+        """Human-readable duration, e.g. '4m 38s'."""
+        if not self.completed_at or not self.started_at:
+            return None
+        delta = self.completed_at - self.started_at
+        total_seconds = int(delta.total_seconds())
+        minutes, seconds = divmod(total_seconds, 60)
+        if minutes:
+            return f"{minutes}m {seconds}s"
+        return f"{seconds}s"
+
     def get_absolute_url(self):
         from django.urls import reverse
         return reverse("results:detail", kwargs={"pk": self.pk})

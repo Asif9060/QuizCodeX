@@ -1,42 +1,84 @@
 """Quizzes views — quiz-taking experience."""
-from django.shortcuts import render
+import json
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import csrf_exempt
+from django.urls import reverse
 
-SAMPLE_QUESTIONS = [
-    {
-        "id": 1, "text": "What is the output of print(type([])) in Python?",
-        "options": [
-            {"id": 1, "text": "<class 'list'>"},
-            {"id": 2, "text": "<class 'tuple'>"},
-            {"id": 3, "text": "<class 'dict'>"},
-            {"id": 4, "text": "<class 'set'>"},
-        ]
-    },
-    {
-        "id": 2, "text": "Which keyword is used to define a function in Python?",
-        "options": [
-            {"id": 1, "text": "function"},
-            {"id": 2, "text": "def"},
-            {"id": 3, "text": "func"},
-            {"id": 4, "text": "define"},
-        ]
-    },
-    {
-        "id": 3, "text": "What does PEP stand for?",
-        "options": [
-            {"id": 1, "text": "Python Enhancement Proposal"},
-            {"id": 2, "text": "Python Execution Protocol"},
-            {"id": 3, "text": "Python Editor Plugin"},
-            {"id": 4, "text": "Programmatic Extension Package"},
-        ]
-    },
-]
+from apps.quizzes.models import Quiz, Option
+from apps.results.services import create_quiz_attempt, submit_answer, complete_quiz
+from apps.results.models import UserResult
 
 
+@login_required
 def quiz_take(request, slug):
+    quiz = get_object_or_404(
+        Quiz.objects.select_related("language")
+        .prefetch_related("questions__options"),
+        slug=slug,
+        is_published=True,
+    )
+
+    # Create a new attempt for this user
+    result = create_quiz_attempt(request.user, quiz)
+
+    # Serialize questions WITHOUT is_correct (never expose answers to client)
+    questions_data = [
+        {
+            "id": q.id,
+            "text": q.text,
+            "options": [
+                {"id": opt.id, "text": opt.text}
+                for opt in q.options.all()
+            ],
+        }
+        for q in quiz.questions.all()
+    ]
+
     return render(request, "quizzes/take.html", {
-        "quiz": {"title": "Python Basics", "slug": slug, "time_limit": 600, "question_count": len(SAMPLE_QUESTIONS)},
-        "questions": SAMPLE_QUESTIONS,
-        "total_questions": len(SAMPLE_QUESTIONS),
-        "language": {"name": "Python", "slug": "python", "icon_char": "Py", "color": "#3776AB"},
-        "results_url": "/results/1/",
+        "quiz": quiz,
+        "language": quiz.language,
+        "questions": questions_data,
+        "total_questions": len(questions_data),
+        "results_url": reverse("results:detail", kwargs={"pk": result.pk}),
+        "result_id": result.pk,
     })
+
+
+@require_POST
+@login_required
+def submit_answer_view(request):
+    """AJAX endpoint: save one answer as the user selects it."""
+    try:
+        data = json.loads(request.body)
+        result_id = data["result_id"]
+        question_id = data["question_id"]
+        option_id = data["option_id"]
+    except (json.JSONDecodeError, KeyError):
+        return JsonResponse({"ok": False, "error": "Invalid payload"}, status=400)
+
+    result = get_object_or_404(UserResult, pk=result_id, user=request.user)
+    if result.is_completed:
+        return JsonResponse({"ok": False, "error": "Quiz already completed"}, status=400)
+
+    question = get_object_or_404(result.quiz.questions, pk=question_id)
+    option = get_object_or_404(Option, pk=option_id, question=question)
+
+    submit_answer(result, question, option)
+    return JsonResponse({"ok": True})
+
+
+@require_POST
+@login_required
+def complete_quiz_view(request, result_pk):
+    """AJAX endpoint: finalize score, fire signal, return redirect URL."""
+    result = get_object_or_404(UserResult, pk=result_pk, user=request.user)
+    if not result.is_completed:
+        complete_quiz(result)
+    return JsonResponse({
+        "ok": True,
+        "redirect_url": reverse("results:detail", kwargs={"pk": result.pk}),
+    })
+

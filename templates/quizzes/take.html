@@ -107,12 +107,15 @@
 {{ questions|json_script:"questions-data" }}
 <script>
   function quizApp() {
+    const CSRF = document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '';
+
     return {
       questions: JSON.parse(document.getElementById('questions-data').textContent),
       currentIndex: 0,
       selected: null,
       timeLeft: {{ quiz.time_limit|default:600 }},
       resultsUrl: "{{ results_url }}",
+      resultId: {{ result_id }},
 
       get currentQuestion() {
         return this.questions[this.currentIndex];
@@ -128,19 +131,51 @@
         return (this.currentIndex / this.questions.length) * 100;
       },
 
-      selectOption(optionNumber) {
+      async selectOption(optionIndex) {
         if (this.selected !== null) return;
-        this.selected = optionNumber;
-        // Brief 150 ms so the highlight is visible before advancing
+        this.selected = optionIndex;
+
+        const question = this.currentQuestion;
+        const option = question.options[optionIndex - 1];
+
+        // POST answer to server immediately
+        try {
+          await fetch("{% url 'quizzes:submit_answer' %}", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-CSRFToken": CSRF,
+            },
+            body: JSON.stringify({
+              result_id: this.resultId,
+              question_id: question.id,
+              option_id: option.id,
+            }),
+          });
+        } catch (e) {
+          console.warn("Answer submit failed:", e);
+        }
+
+        // Brief highlight then advance
         setTimeout(() => this.advance(), 150);
       },
 
-      advance() {
+      async advance() {
         this.selected = null;
         if (this.currentIndex < this.questions.length - 1) {
           this.currentIndex++;
         } else {
-          window.location.href = this.resultsUrl;
+          // Last question — complete quiz and get redirect URL
+          try {
+            const resp = await fetch(`/quizzes/${this.resultId}/complete/`, {
+              method: "POST",
+              headers: { "X-CSRFToken": CSRF },
+            });
+            const data = await resp.json();
+            window.location.href = data.redirect_url || this.resultsUrl;
+          } catch (e) {
+            window.location.href = this.resultsUrl;
+          }
         }
       },
 
@@ -151,7 +186,7 @@
             this.timeLeft--;
           } else {
             clearInterval(timer);
-            window.location.href = this.resultsUrl;
+            this.advance();
           }
         }, 1000);
         {% endif %}

@@ -1,24 +1,29 @@
-"""Languages views — language catalog and detail."""
-from django.shortcuts import render
-from apps.core.views import SAMPLE_LANGUAGES
+"""Languages views."""
+from django.shortcuts import render, get_object_or_404
+from django.db.models import Count, Q
+from apps.languages.models import Language
+from apps.quizzes.models import Quiz
 
 
 def language_list(request):
-    return render(request, "languages/list.html", {
-        "languages": SAMPLE_LANGUAGES,
-    })
+    languages = (
+        Language.objects
+        .filter(is_published=True)
+        .annotate(quiz_count=Count("quiz", filter=Q(quiz__is_published=True)))
+        .order_by("sort_order", "name")
+    )
+    return render(request, "languages/list.html", {"languages": languages})
 
 
 def language_detail(request, slug):
-    lang = next((l for l in SAMPLE_LANGUAGES if l["slug"] == slug), SAMPLE_LANGUAGES[0])
-    sample_quizzes = [
-        {"title": "Python Basics", "slug": "python-basics", "difficulty": "Beginner", "question_count": 10, "time_limit": 600},
-        {"title": "Python OOP", "slug": "python-oop", "difficulty": "Intermediate", "question_count": 15, "time_limit": 900},
-        {"title": "Python Data Structures", "slug": "python-data-structures", "difficulty": "Intermediate", "question_count": 20, "time_limit": 1200},
-        {"title": "Python Advanced", "slug": "python-advanced", "difficulty": "Advanced", "question_count": 25, "time_limit": 1800},
-        {"title": "Python Decorators", "slug": "python-decorators", "difficulty": "Advanced", "question_count": 10, "time_limit": 900},
-    ]
+    language = get_object_or_404(Language, slug=slug, is_published=True)
+    quizzes = (
+        Quiz.objects
+        .filter(language=language, is_published=True)
+        .annotate(num_questions=Count("questions"))
+        .order_by("difficulty", "title")
+    )
     return render(request, "quizzes/list.html", {
-        "language": lang,
-        "quizzes": sample_quizzes,
+        "language": language,
+        "quizzes": quizzes,
     })

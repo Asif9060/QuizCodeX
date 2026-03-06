@@ -12,7 +12,7 @@
     <h1 class="text-2xl font-bold mb-2">{{ result.quiz.title }}</h1>
     <div class="flex items-center justify-center gap-1.5 text-sm text-base-content/40 mb-8">
       <span class="material-symbols-rounded text-sm">code</span>
-      {{ result.language.name }}
+      {{ result.quiz.language.name }}
     </div>
 
     <!-- Score circle -->
@@ -57,17 +57,17 @@
     <div class="grid grid-cols-3 gap-3 max-w-xs mx-auto">
       <div class="stat-card text-center py-3">
         <span class="material-symbols-rounded text-success text-xl mb-1">check_circle</span>
-        <div class="font-bold text-lg text-success">{{ result.correct }}</div>
+        <div class="font-bold text-lg text-success">{{ correct }}</div>
         <div class="text-xs text-base-content/40">Correct</div>
       </div>
       <div class="stat-card text-center py-3">
         <span class="material-symbols-rounded text-error text-xl mb-1">cancel</span>
-        <div class="font-bold text-lg text-error">{{ result.incorrect }}</div>
+        <div class="font-bold text-lg text-error">{{ incorrect }}</div>
         <div class="text-xs text-base-content/40">Incorrect</div>
       </div>
       <div class="stat-card text-center py-3">
         <span class="material-symbols-rounded text-base-content/30 text-xl mb-1">radio_button_unchecked</span>
-        <div class="font-bold text-lg">{{ result.skipped }}</div>
+        <div class="font-bold text-lg">{{ skipped }}</div>
         <div class="text-xs text-base-content/40">Skipped</div>
       </div>
     </div>

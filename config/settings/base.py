@@ -111,7 +111,6 @@ LOGIN_URL = "accounts:login"
 LOGIN_REDIRECT_URL = "home"
 LOGOUT_REDIRECT_URL = "home"
 
-
 # ─── Internationalization ─────────────────────────────────────────────────────
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
@@ -130,6 +129,31 @@ MEDIA_ROOT = BASE_DIR / "media"
 
 # ─── Default Primary Key ──────────────────────────────────────────────────────
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+
+# ─── AI Provider Configuration ────────────────────────────────────────────────
+# Change AI_ACTIVE_PROVIDER in .env to switch between providers instantly.
+# Change the matching *_MODEL var to switch models without touching code.
+AI_ACTIVE_PROVIDER = config("AI_ACTIVE_PROVIDER", default="ollama")
+
+AI_PROVIDERS = {
+    "ollama": {
+        "base_url": config("OLLAMA_BASE_URL", default="http://localhost:11434"),
+        "model": config("OLLAMA_MODEL", default="qwen3-coder:480b-cloud"),
+    },
+    "openai": {
+        "api_key": config("OPENAI_API_KEY", default=""),
+        "model": config("OPENAI_MODEL", default="gpt-4o"),
+    },
+    "gemini": {
+        "api_key": config("GEMINI_API_KEY", default=""),
+        "model": config("GEMINI_MODEL", default="gemini-1.5-pro"),
+    },
+    "anthropic": {
+        "api_key": config("ANTHROPIC_API_KEY", default=""),
+        "model": config("ANTHROPIC_MODEL", default="claude-3-5-sonnet-20241022"),
+    },
+}
 
 
 # ─── Tailwind CSS ─────────────────────────────────────────────────────────────

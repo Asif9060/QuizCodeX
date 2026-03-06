@@ -29,6 +29,20 @@ class CustomUser(AbstractUser):
     def display_name(self):
         return self.get_full_name() or self.username
 
+    @property
+    def favorite_language(self):
+        """Derive the most-used language from completed quiz results."""
+        from django.db.models import Count
+        entry = (
+            self.results
+            .filter(is_completed=True)
+            .values("quiz__language__name")
+            .annotate(cnt=Count("id"))
+            .order_by("-cnt")
+            .first()
+        )
+        return entry["quiz__language__name"] if entry else None
+
     def get_absolute_url(self):
         from django.urls import reverse
         return reverse("accounts:profile", kwargs={"username": self.username})

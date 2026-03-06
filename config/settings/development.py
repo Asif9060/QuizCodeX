@@ -8,14 +8,14 @@ DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
 
-# Use SQLite locally during frontend/dev phase.
-# Switch to MySQL (base.py config) when the database server is available.
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    }
-}
+# MySQL (inherits from base.py via my.cnf — MySQL84 service must be running)
+# SQLite fallback: uncomment below and comment out to use SQLite during offline work
+# DATABASES = {
+#     "default": {
+#         "ENGINE": "django.db.backends.sqlite3",
+#         "NAME": BASE_DIR / "db.sqlite3",
+#     }
+# }
 
 # Windows npm path for django-tailwind
 NPM_BIN_PATH = "npm.cmd"
