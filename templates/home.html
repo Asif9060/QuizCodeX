@@ -34,7 +34,7 @@
           Test your knowledge across 20 programming languages. From Python to Rust, level up your skills with 50 targeted quizzes per language.
         </p>
 
-        <div class="flex flex-wrap gap-3">
+        <div class="flex flex-wrap gap-3 hero-cta-buttons">
           <a href="{% url 'languages:list' %}" class="btn btn-primary btn-lg gap-2">
             <span class="material-symbols-rounded">rocket_launch</span>
             Start a Quiz
@@ -222,4 +222,18 @@
   </div>
 </section>
 
+{% endblock %}
+
+{% block extra_head %}
+<style>
+  @media (max-width: 640px) {
+    .hero-cta-buttons {
+      flex-direction: column;
+    }
+    .hero-cta-buttons .btn {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+</style>
 {% endblock %}
